@@ -51,7 +51,7 @@ npm install -g @angular/cli
 
 ```
 cd backend/Demo.Api
-dotnet run
+dotnet run --launch-profile https
 ```
 
 API:
