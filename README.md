@@ -1,4 +1,4 @@
-# Demo Error Handling Application
+# Kameleo Demo App - Error Handling Application
 
 ## Overview
 
