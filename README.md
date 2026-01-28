@@ -1,94 +1,66 @@
 # Kameleo Demo App - Error Handling Application
 
-## Overview
+## What this project is
 
-This project demonstrates a small full-stack application built with an Angular frontend and a .NET Minimal API backend.
+This is a small full-stack demo application built with:
 
-The primary goal is to showcase a production-style error handling architecture, including:
+- Angular (standalone + Angular Material)
+- .NET Minimal API
 
-- centralized global HTTP error handling
-- consistent backend error responses
-- user-friendly toast notifications
-- graceful offline and network handling
-- component-level overrides for specific business cases
+The goal is to demonstrate a clean, production-style error handling approach rather than complex UI or features.
 
-The focus is on clean structure, maintainability, and realistic patterns rather than UI complexity.
+It shows how to:
+
+- handle HTTP errors globally
+- show consistent toast notifications
+- handle offline/network failures
+- override error behavior at component level when needed
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 kameleo-demo/
-├─ backend/   .NET Minimal API
-└─ frontend/  Angular application
+├─ backend/   .NET API
+└─ frontend/  Angular app
 ```
 
 ---
 
 ## Prerequisites
 
-### Backend
+Backend:
 
-- .NET SDK 8 or newer
+- .NET SDK 8+
 
-Verify:
+Frontend:
 
-```
-dotnet --version
-```
-
-### Frontend
-
-- Node.js 18 or newer
+- Node 18+
 - Angular CLI
 
-Install Angular CLI:
+Install Angular CLI if needed:
 
 ```
 npm install -g @angular/cli
 ```
 
-Verify:
-
-```
-ng version
-```
-
 ---
 
-## Getting Started
-
-Clone the repository:
-
-```
-git clone <repo-url>
-cd kameleo-demo
-```
-
----
-
-## Running the Backend
-
-Navigate to the API project:
+## Run the backend
 
 ```
 cd backend/Demo.Api
-```
-
-Run:
-
-```
 dotnet run
 ```
 
-The API will start on:
+API:
 
 ```
 https://localhost:1337
 ```
 
-Swagger UI is available at:
+Swagger:
 
 ```
 https://localhost:1337/swagger
@@ -96,9 +68,7 @@ https://localhost:1337/swagger
 
 ---
 
-## Running the Frontend
-
-Open a second terminal:
+## Run the frontend
 
 ```
 cd frontend/demo-ui
@@ -106,150 +76,83 @@ npm install
 ng serve --ssl
 ```
 
-Open the application:
+App:
 
 ```
 https://localhost:4200
 ```
 
-The Angular development server proxies API requests to the backend.
-
 ---
 
-## Building for Production
+## Demo endpoints
 
-### Backend
-
-```
-dotnet publish -c Release
-```
-
-### Frontend
+The backend exposes three simple endpoints:
 
 ```
-ng build
+GET /api/demo/success   → 200
+GET /api/demo/error     → 500
+GET /api/demo/upgrade   → 402
 ```
 
-Frontend build output:
-
-```
-frontend/demo-ui/dist/
-```
-
----
-
-## Backend Behavior
-
-The API exposes simple demo endpoints that intentionally return different HTTP outcomes:
-
-```
-GET /api/demo/success   → 200 OK
-GET /api/demo/error     → 500 Internal Server Error
-GET /api/demo/upgrade   → 402 Payment Required
-```
-
-All non-200 responses return a consistent JSON structure:
+All errors return a consistent JSON format:
 
 ```json
 {
   "error": {
-    "code": "ERROR_CODE",
-    "message": "Human readable message",
-    "traceId": "..."
+    "code": "SOME_CODE",
+    "message": "Message for the user"
   }
 }
 ```
 
-This predictable format allows the frontend to reliably map backend errors to user-friendly UI messages.
+This makes it easy for the frontend to map backend errors to UI messages.
 
 ---
 
-## Frontend Behavior
+## Error handling approach
 
-The UI displays three buttons:
+### Global handling
 
-- Success
-- Error
-- Upgrade Required
+An Angular HTTP interceptor catches all failed requests and forwards them to a central `ErrorHandlerService`.
 
-Each button calls one backend endpoint to demonstrate different error scenarios.  
-Notifications are shown using Angular Material snackbars.
+This service:
 
----
+- handles offline errors (status 0)
+- maps backend error codes to friendly messages
+- shows snackbars
+- keeps components free of duplicated error logic
 
-## Error Handling Architecture
-
-### Global HTTP Interceptor
-
-A custom Angular `HttpInterceptor` intercepts all HTTP requests.
-
-Responsibilities:
-
-- catch failed responses
-- forward errors to a centralized handler
-- display global notifications
-- handle offline and network failures (status 0)
-
-This ensures consistent behavior across the entire application without duplicating logic inside components.
+So most components don’t need any error handling at all.
 
 ---
 
-### Central ErrorHandlerService
+### Component overrides
 
-All user-facing error presentation logic is centralized in a single service.
+Some errors require custom behavior.
 
-Responsibilities:
-
-- detect offline/network errors
-- parse backend error payloads
-- map error codes to friendly messages
-- display snackbars
-- attach optional actions when required
-
-Examples:
-
-- network failure → "Network error. Please check your connection."
-- generic server error → "Something went wrong"
-- PLAN_UPGRADE_REQUIRED → snackbar with an "Upgrade now" action
-
-Keeping this logic centralized improves maintainability and keeps components simple.
-
----
-
-### Component-Level Overrides
-
-Some errors require custom behavior that differs from the global default.
-
-For example:
+For example, when the backend returns:
 
 ```
-/api/demo/upgrade → 402 PLAN_UPGRADE_REQUIRED
+402 PLAN_UPGRADE_REQUIRED
 ```
 
-Instead of the generic error message, the UI shows:
+Instead of a generic toast, the app shows:
 
 - a specific message
-- an action button ("Upgrade now")
+- an "Upgrade now" button
 - navigation to the pricing page
 
-This is implemented by opting out of global handling using an `HttpContext` flag and handling the error locally in the originating component.
-
-This approach allows:
-
-- global defaults for most scenarios
-- local customization only where necessary
-- clear separation of concerns
+This is done by opting out of the global interceptor using `HttpContext` and handling the error locally in that component.
 
 ---
 
-## Design Goals
+## Why this structure
 
-This project demonstrates:
+The main idea is:
 
-- consistent backend error contracts
-- centralized frontend error handling
+- global defaults for common cases
+- local overrides only when necessary
+- centralized error logic
 - minimal duplication
-- clear separation of responsibilities
-- maintainable, production-style patterns
 
-The implementation prioritizes clarity and robustness over complexity.
+This keeps the code simple and easier to maintain.
